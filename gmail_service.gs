@@ -3,9 +3,10 @@
  */
 
 // Your personal email accounts that forward bank emails
-const PERSONAL_ACCOUNTS = ['jetray2121@gmail.com', 'martin.lim511@gmail.com'];
+// IMPORTANT: add your accounts here : const PERSONAL_ACCOUNTS = [];
 
 // Bank email addresses
+//ADD ANY OTHER BANKS HERE
 const BANK_ADDRESSES = [
   'unialerts@uobgroup.com',
   'no-reply@gxs.com.sg', 
