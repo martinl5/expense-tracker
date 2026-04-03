@@ -1,11 +1,12 @@
 # Expense Tracker
 
-Automated expense tracking from Singapore bank email alerts using Google Apps Script.
+Automated expense tracking from Singapore bank email alerts using Google Apps Script + AI.
 
 ## Features
 
-- **6 Bank Support**: OCBC, DBS, UOB, Trust Bank, GXS, PayLah
-- **Auto-Categorization**: Uses OpenRouter AI (free models)
+- **AI-Powered Parsing**: Uses OpenRouter AI to extract transaction details from ANY bank
+- **Bank-Agnostic**: Works with any bank - no need to add new parsers
+- **Auto-Categorization**: AI categorizes expenses (Food, Transport, Shopping, etc.)
 - **Daily Automation**: Runs automatically every day
 - **Google Sheets**: Outputs to "Expense Tracker" spreadsheet
 - **Deduplication**: Avoids duplicate entries
@@ -14,20 +15,21 @@ Automated expense tracking from Singapore bank email alerts using Google Apps Sc
 
 1. Forward bank transaction emails to a dedicated Gmail address
 2. The script searches for emails from your personal accounts (forwarding)
-3. Parses each email to extract: date, amount, currency, merchant
-4. Uses AI to categorize the expense (Food, Transport, Shopping, etc.)
+3. **AI parses** each email to extract: date, amount, currency, merchant, type
+4. AI categorizes the expense
 5. Writes to Google Sheets
 
 ## Supported Banks
 
-| Bank | Email Type |
-|------|------------|
-| OCBC | Credit Card |
-| DBS | Credit Card |
-| UOB | Funds Transfer |
-| Trust Bank | Card Transactions |
-| GXS | Card Transactions |
-| PayLah | Transfers/Payments |
+**Any bank!** The AI parser works with all banks automatically - no bank-specific code needed.
+
+Tested with:
+- OCBC
+- DBS
+- UOB
+- Trust Bank
+- GXS
+- PayLah
 
 ## Setup
 
@@ -105,7 +107,7 @@ Click **View** → **Logs** to see what's happening
 | C | Amount |
 | D | Merchant/Recipient |
 | E | Category (AI-generated) |
-| F | Type (Card/Transfer/Payment) |
+| F | Type (Purchase, Transfer, Subscription, Refund) |
 | G | Bank |
 | H | Raw Description |
 
@@ -115,8 +117,8 @@ Click **View** → **Logs** to see what's happening
 |------|---------|
 | `config.gs` | Configuration & ScriptProperties |
 | `gmail_service.gs` | Fetch emails from Gmail |
-| `parsers.gs` | Parsers for 6 bank email formats |
-| `openrouter.gs` | AI categorization |
+| `parsers.gs` | AI-powered parser (works with any bank) |
+| `openrouter.gs` | OpenRouter API calls |
 | `sheets_service.gs` | Write to Google Sheets |
 | `triggers.gs` | Daily trigger setup |
 | `main.gs` | Main orchestrator |
@@ -140,7 +142,28 @@ createTriggerAtHourSGT(8);  // 8:00 AM SGT
 In Script Properties, set:
 ```
 MODEL = "qwen/qwen3.6-plus:free"
-// Or use: nvidia/nemotron-nano-9b-v2:free
+// Or use any model from openrouter.ai
+```
+
+## AI Parser
+
+The AI parser uses this prompt to extract transaction details:
+
+```
+**Role:** You are a data extraction specialist focused on high precision.
+
+**Task:** Extract transaction details from the provided email and format them into a pipe-delimited list.
+
+**Output Schema:**
+`date|amount|currency|merchant|type`
+
+**Rules for Extraction:**
+* **Date:** Convert all dates to `YYYY-MM-DD` format.
+* **Amount:** Provide only the numerical value (e.g., 12.50). 
+* **Currency:** Use the 3-letter ISO code (e.g., USD, EUR, GBP).
+* **Merchant:** The name of the business or vendor.
+* **Type:** Categorize as "Purchase," "Refund," "Subscription," or "Transfer."
+* **Missing Data:** If a field is not found, write "N/A".
 ```
 
 ## Troubleshooting
@@ -150,9 +173,9 @@ MODEL = "qwen/qwen3.6-plus:free"
 - Verify the email addresses in `PERSONAL_ACCOUNTS` are correct
 - Run `testGetAllEmails()` to debug
 
-### Parser fails
-- Check Logs for "parse failed" messages
-- Some email formats may need custom parser updates
+### AI parsing fails
+- Check Logs for errors
+- Verify OpenRouter API key is set correctly
 
 ### Categorization not working
 - Verify OpenRouter API key is set correctly

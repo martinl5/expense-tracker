@@ -59,7 +59,7 @@ function callOpenRouterAPI(apiKey, model, prompt) {
         content: prompt
       }
     ],
-    max_tokens: 50
+    max_tokens: 500
   };
   
   const options = {
@@ -74,7 +74,7 @@ function callOpenRouterAPI(apiKey, model, prompt) {
   };
   
   const response = UrlFetchApp.fetch(url, options);
-  const json = JSON.parse(response.getResponseText());
+  const json = JSON.parse(response.getContentText());
   
   if (json.error) {
     throw new Error(json.error.message);
