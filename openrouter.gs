@@ -1,7 +1,13 @@
 /**
  * OpenRouter API Service - LLM-powered expense categorization
- * Model: qwen/qwen3.6-plus:free (or fallback)
+ * Model: configurable via ScriptProperties (default: nvidia/nemotron-3-nano-30b-a3b:free)
  */
+
+const OPENROUTER_CONFIG = {
+  MAX_RETRIES: 3,
+  INITIAL_DELAY_MS: 2000,
+  BACKOFF_MULTIPLIER: 2
+};
 
 /**
  * Categorize expense using OpenRouter API
@@ -18,10 +24,12 @@ function categorizeExpense(description, defaultCategory) {
     return defaultCategory || 'Other';
   }
   
+  Logger.log('Using model: ' + model);
+  
   const prompt = buildCategorizationPrompt(description);
   
   try {
-    const response = callOpenRouterAPI(apiKey, model, prompt);
+    const response = callOpenRouterAPIWithRetry(apiKey, model, prompt);
     const category = parseCategoryResponse(response, defaultCategory);
     
     Logger.log('Categorized "' + description + '" as "' + category + '"');
@@ -46,7 +54,46 @@ Respond with ONLY the category name, nothing else.`;
 }
 
 /**
- * Call OpenRouter API
+ * Call OpenRouter API with retry logic
+ * Implements exponential backoff for rate limit errors
+ */
+function callOpenRouterAPIWithRetry(apiKey, model, prompt) {
+  let lastError = null;
+  let delay = OPENROUTER_CONFIG.INITIAL_DELAY_MS;
+  
+  for (let attempt = 1; attempt <= OPENROUTER_CONFIG.MAX_RETRIES; attempt++) {
+    try {
+      const result = callOpenRouterAPI(apiKey, model, prompt);
+      return result;
+    } catch (e) {
+      lastError = e;
+      
+      // Check if it's a retryable error (429 rate limit, 502 bad gateway)
+      const isRetryable = e.message.includes('429') || 
+                          e.message.includes('rate-limited') ||
+                          e.message.includes('502') ||
+                          e.message.includes('503') ||
+                          e.message.includes('Empty response');
+      
+      if (isRetryable) {
+        Logger.log('Retryable error, attempt ' + attempt + '/' + OPENROUTER_CONFIG.MAX_RETRIES + '. Waiting ' + delay + 'ms...');
+        
+        if (attempt < OPENROUTER_CONFIG.MAX_RETRIES) {
+          Utilities.sleep(delay);
+          delay *= OPENROUTER_CONFIG.BACKOFF_MULTIPLIER;
+        }
+      } else {
+        // Non-retryable error, don't retry
+        throw e;
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
+ * Call OpenRouter API (single attempt)
  */
 function callOpenRouterAPI(apiKey, model, prompt) {
   const url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -74,10 +121,21 @@ function callOpenRouterAPI(apiKey, model, prompt) {
   };
   
   const response = UrlFetchApp.fetch(url, options);
-  const json = JSON.parse(response.getContentText());
+  const responseText = response.getContentText();
+  
+  // Handle empty response
+  if (!responseText || responseText.trim() === '') {
+    throw new Error('Empty response from OpenRouter API');
+  }
+  
+  const json = JSON.parse(responseText);
   
   if (json.error) {
     throw new Error(json.error.message);
+  }
+  
+  if (!json.choices || !json.choices[0] || !json.choices[0].message) {
+    throw new Error('Invalid response structure from OpenRouter API');
   }
   
   return json.choices[0].message.content.trim();

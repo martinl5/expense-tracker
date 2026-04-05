@@ -15,7 +15,7 @@ const CONFIG = {
   // Default values
   DEFAULTS: {
     SPREADSHEET_NAME: 'Expense Tracker',
-    MODEL: 'qwen/qwen3.6-plus:free',
+    MODEL: 'openrouter/free,
     LAST_RUN_DATE: null // Will be set on first run
   },
 
