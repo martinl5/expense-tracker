@@ -1,6 +1,6 @@
 /**
  * OpenRouter API Service - LLM-powered expense categorization
- * Model: configurable via ScriptProperties (default: nvidia/nemotron-3-nano-30b-a3b:free)
+ * Model: configurable via ScriptProperties (default: meta-llama/llama-3.2-3b-instruct:free)
  */
 
 const OPENROUTER_CONFIG = {

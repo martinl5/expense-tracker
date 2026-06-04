@@ -2,8 +2,10 @@
  * Gmail Service - Search and fetch bank transaction emails
  */
 
-// Your personal email accounts that forward bank emails
-// IMPORTANT: add your accounts here : const PERSONAL_ACCOUNTS = [];
+// Your personal email accounts that forward bank emails.
+// IMPORTANT: Add your forwarding address(es) here before running the script.
+// Example: const PERSONAL_ACCOUNTS = ['your-email@gmail.com'];
+const PERSONAL_ACCOUNTS = [];
 
 // Bank email addresses
 //ADD ANY OTHER BANKS HERE
@@ -124,43 +126,13 @@ function extractEmailData(message) {
 }
 
 /**
- * Detect bank from email body only
+ * Detect bank from email content
  */
 function detectBank(email) {
-  const from = email.from || '';
-  const body = email.body || '';
-  
-  // Combine all text for detection
-  const allText = from + ' ' + body;
-  
-  // Check for bank keywords in the content
-  // OCBC
-  if (/ocbc|notify\.ocbc\.com/i.test(allText)) {
-    return 'OCBC';
-  }
-  // DBS (card)
-  if (/dbs.*card|ibanking\.alert|dbs\.com.*card/i.test(allText)) {
-    return 'DBS';
-  }
-  // PayLah
-  if (/paylah|paylah\!|dbs.*paylah/i.test(allText)) {
-    return 'PayLah';
-  }
-  // UOB
-  if (/uob|unialerts@uobgroup/i.test(allText)) {
-    return 'UOB';
-  }
-  // Trust Bank
-  if (/trust|trustbank|from_us@trustbank/i.test(allText)) {
-    return 'Trust';
-  }
-  // GXS
-  if (/gxs|gx\.com\.sg/i.test(allText)) {
-    return 'GXS';
-  }
-  
-  Logger.log('Could not detect bank from: ' + allText.substring(0, 100));
-  return null;
+  const allText = (email.from || '') + ' ' + (email.body || '');
+  const bank = detectBankByPattern(allText);
+  if (!bank) Logger.log('Could not detect bank from: ' + allText.substring(0, 100));
+  return bank;
 }
 
 /**
