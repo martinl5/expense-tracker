@@ -15,7 +15,7 @@ const CONFIG = {
   // Default values
   DEFAULTS: {
     SPREADSHEET_NAME: 'Expense Tracker',
-    MODEL: 'openrouter/free,
+    MODEL: 'meta-llama/llama-3.2-3b-instruct:free',
     LAST_RUN_DATE: null // Will be set on first run
   },
 
@@ -32,6 +32,22 @@ const CONFIG = {
     PAYLAH: { name: 'PayLah', pattern: /paylah\.alert@dbs\.com/i }
   }
 };
+
+/**
+ * Detect bank name from text using CONFIG.BANKS patterns.
+ * PayLah is checked before DBS because PayLah emails also match the DBS pattern.
+ * @param {string} text
+ * @returns {string|null}
+ */
+function detectBankByPattern(text) {
+  if (!text) return null;
+  for (const key of ['PAYLAH', 'OCBC', 'DBS', 'UOB', 'TRUST', 'GXS']) {
+    if (CONFIG.BANKS[key].pattern.test(text)) {
+      return CONFIG.BANKS[key].name;
+    }
+  }
+  return null;
+}
 
 /**
  * Initialize configuration

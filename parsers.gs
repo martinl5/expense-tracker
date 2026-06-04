@@ -139,16 +139,7 @@ function parseAIResponse(response) {
  * Detect bank from email content (fallback)
  */
 function detectBankFromContent(body) {
-  const allText = body;
-  
-  if (/ocbc|notify\.ocbc\.com/i.test(allText)) return 'OCBC';
-  if (/dbs.*card|ibanking\.alert/i.test(allText)) return 'DBS';
-  if (/paylah/i.test(allText)) return 'PayLah';
-  if (/uob|unialerts/i.test(allText)) return 'UOB';
-  if (/trust|trustbank/i.test(allText)) return 'Trust';
-  if (/gxs/i.test(allText)) return 'GXS';
-  
-  return null;
+  return detectBankByPattern(body);
 }
 
 /**

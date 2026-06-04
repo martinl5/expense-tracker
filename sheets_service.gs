@@ -122,8 +122,8 @@ function getExistingExpenses(sheet) {
   
   return data.map(row => ({
     date: row[0],
-    amount: row[1],
-    merchant: row[2]
+    amount: row[2],
+    merchant: row[3]
   }));
 }
 
@@ -155,7 +155,7 @@ function getAllExpenses() {
     return [];
   }
   
-  const dataRange = sheet.getRange(2, 1, lastRow - 1, 7);
+  const dataRange = sheet.getRange(2, 1, lastRow - 1, 8);
   return dataRange.getValues();
 }
 

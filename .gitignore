@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Node (if tooling is ever added)
+node_modules/
+
+# Environment / secrets
+.env
+*.env.local

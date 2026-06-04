@@ -147,31 +147,34 @@ MODEL = "qwen/qwen3.6-plus:free"
 
 ## AI Parser
 
-The AI parser uses this prompt to extract transaction details:
+The AI parser first classifies the email, then extracts details if it's an expense:
 
+**If expense:**
 ```
-**Role:** You are a data extraction specialist focused on high precision.
-
-**Task:** Extract transaction details from the provided email and format them into a pipe-delimited list.
-
-**Output Schema:**
-`date|amount|currency|merchant|type`
-
-**Rules for Extraction:**
-* **Date:** Convert all dates to `YYYY-MM-DD` format.
-* **Amount:** Provide only the numerical value (e.g., 12.50). 
-* **Currency:** Use the 3-letter ISO code (e.g., USD, EUR, GBP).
-* **Merchant:** The name of the business or vendor.
-* **Type:** Categorize as "Purchase," "Refund," "Subscription," or "Transfer."
-* **Missing Data:** If a field is not found, write "N/A".
+IS_EXPENSE|date|amount|currency|merchant|type
 ```
+
+**If not an expense** (security alert, promo, balance update, etc.):
+```
+NOT_EXPENSE|reason
+```
+
+Reason options: `security_alert`, `promotional`, `balance_update`, `refund_credit`, `login_notification`, `account_update`, `other`
+
+Fields follow these rules:
+- **Date:** `YYYY-MM-DD` format
+- **Amount:** Numerical value only (e.g., `12.50`)
+- **Currency:** 3-letter ISO code (e.g., `SGD`, `USD`)
+- **Merchant:** Name of the business or vendor
+- **Type:** `Purchase`, `Refund`, `Subscription`, or `Transfer`
+- **Missing data:** Written as `N/A`
 
 ## Troubleshooting
 
 ### No emails found
 - Check that bank emails are being forwarded to your dedicated email
 - Verify the email addresses in `PERSONAL_ACCOUNTS` are correct
-- Run `testGetAllEmails()` to debug
+- Run `testGetEmails()` to debug
 
 ### AI parsing fails
 - Check Logs for errors
